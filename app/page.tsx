@@ -1,19 +1,26 @@
+"use client";
+
 import Image from "next/image";
+import { useAuthModal } from "../components/AppShell";
+import landingImage from "../assets/landing.png";
 
 export default function Home() {
+  const { openLogin, isSignedIn, handleAuthClick } = useAuthModal();
+
   return (
 <html lang="en">
   <head>
     <title>Summarist Home Page</title>
   </head>
   <body>
-    <nav className="nav">
+      <nav className="nav">
       <div className="nav__wrapper">
-        <figure className="nav__img--mask">
-          <img className="nav__img" src="" alt="logo" />
-        </figure>
         <ul className="nav__list--wrapper">
-          <li className="nav__list nav__list--login">Login</li>
+          <li className="nav__list nav__list--login">
+            <button type="button" className="nav__login-button" onClick={handleAuthClick}>
+              {isSignedIn ? "Logout" : "Login"}
+            </button>
+          </li>
           <li className="nav__list nav__list--mobile">About</li>
           <li className="nav__list nav__list--mobile">Contact</li>
           <li className="nav__list nav__list--mobile">Help</li>
@@ -36,10 +43,12 @@ export default function Home() {
                 <br className="remove--tablet" />
                 and even people who don’t like to read.
               </div>
-              <button className="btn home__cta--btn">Login</button>
+              <button className="btn home__cta--btn" onClick={handleAuthClick}>
+                {isSignedIn ? "Logout" : "Login"}
+              </button>
             </div>
             <figure className="landing__image--mask">
-              <img src="" alt="landing" />
+              <Image src={landingImage} alt="landing" />
             </figure>
           </div>
         </div>
@@ -213,7 +222,9 @@ export default function Home() {
             </div>
           </div>
           <div className="reviews__btn--wrapper">
-            <button className="btn home__cta--btn">Login</button>
+            <button className="btn home__cta--btn" onClick={handleAuthClick}>
+              {isSignedIn ? "Logout" : "Login"}
+            </button>
           </div>
         </div>
       </div>
