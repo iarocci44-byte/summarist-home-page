@@ -8,11 +8,7 @@ export default function Home() {
   const { openLogin, isSignedIn, handleAuthClick } = useAuthModal();
 
   return (
-<html lang="en">
-  <head>
-    <title>Summarist Home Page</title>
-  </head>
-  <body>
+    <>
       <nav className="nav">
       <div className="nav__wrapper">
         <ul className="nav__list--wrapper">
@@ -345,8 +341,7 @@ export default function Home() {
         </div>
       </div>
     </section>
-  </body>
-</html>
+    </>
 
   );
 }
