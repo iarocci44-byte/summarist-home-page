@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useAuthModal } from "../components/AppShell";
 import landingImage from "../assets/landing.png";
+import logo from "../assets/logo.png";
 
 export default function Home() {
   const { openLogin, isSignedIn, handleAuthClick } = useAuthModal();
@@ -11,6 +12,9 @@ export default function Home() {
     <>
       <nav className="nav">
       <div className="nav__wrapper">
+        <figure className="nav__img--mask">
+          <Image src={logo} alt="Summarist logo" />
+        </figure>
         <ul className="nav__list--wrapper">
           <li className="nav__list nav__list--login">
             <button type="button" className="nav__login-button" onClick={handleAuthClick}>

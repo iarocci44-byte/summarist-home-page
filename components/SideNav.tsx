@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import logo from "../assets/logo.png";
 
 type SideNavProps = {
@@ -16,6 +17,9 @@ export default function SideNav({ isSignedIn, onAuthClick }: SideNavProps) {
         <button type="button" className="side-nav__link" onClick={onAuthClick}>
           Logout
         </button>
+        <Link className="side-nav__link" href="/for-you">
+          For You
+        </Link>
         <a className="side-nav__link" href="#features">
           Features
         </a>

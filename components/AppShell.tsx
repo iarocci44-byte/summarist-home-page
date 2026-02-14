@@ -1,10 +1,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import AuthPanel from "./AuthPanel";
 import SideNav from "./SideNav";
+import SearchBar from "./SearchBar";
 
 type AuthModalContextValue = {
   openLogin: () => void;
@@ -27,6 +29,8 @@ type AppShellProps = {
 export default function AppShell({ children }: AppShellProps) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const openLogin = () => setIsLoginOpen(true);
   const closeLogin = () => setIsLoginOpen(false);
@@ -38,6 +42,17 @@ export default function AppShell({ children }: AppShellProps) {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (isSignedIn && pathname === "/") {
+      router.push("/for-you");
+      return;
+    }
+
+    if (!isSignedIn && pathname === "/for-you") {
+      router.push("/");
+    }
+  }, [isSignedIn, pathname, router]);
 
   const handleAuthClick = async () => {
     if (isSignedIn) {
@@ -59,6 +74,7 @@ export default function AppShell({ children }: AppShellProps) {
         <SideNav isSignedIn={isSignedIn} onAuthClick={handleAuthClick} />
       ) : null}
       <div className={`page-shell${isSignedIn ? " page-shell--with-side-nav" : ""}`}>
+        {isSignedIn && pathname !== "/" && <SearchBar />}
         {children}
       </div>
       {isLoginOpen ? (
