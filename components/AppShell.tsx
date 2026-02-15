@@ -57,6 +57,7 @@ export default function AppShell({ children }: AppShellProps) {
   const handleAuthClick = async () => {
     if (isSignedIn) {
       await signOut(auth);
+      router.push("/");
       return;
     }
 
