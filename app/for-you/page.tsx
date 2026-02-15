@@ -9,7 +9,9 @@ export default function ForYouPage() {
   const { isSignedIn, handleAuthClick } = useAuthModal();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -20,10 +22,11 @@ export default function ForYouPage() {
     setLoading(true);
     setError(null);
 
-    getRecommendedBooks()
+    getRecommendedBooks(0, 10)
       .then((data) => {
         if (isMounted) {
           setBooks(data);
+          setOffset(10);
         }
       })
       .catch(() => {
@@ -41,6 +44,23 @@ export default function ForYouPage() {
       isMounted = false;
     };
   }, [isSignedIn]);
+
+  const handleLoadMore = async () => {
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const moreBooks = await getRecommendedBooks(offset, 10);
+      if (moreBooks.length > 0) {
+        setBooks(prevBooks => [...prevBooks, ...moreBooks]);
+        setOffset(prevOffset => prevOffset + 10);
+      }
+    } catch (err) {
+      setError("Unable to load more books.");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   if (!isSignedIn) {
     return (
@@ -71,7 +91,17 @@ export default function ForYouPage() {
             </p>
           </div>
         {loading ? (
-          <div className="for-you__state">Loading recommendations...</div>
+          <div className="for-you__grid">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <div key={index} className="book-card book-card--skeleton">
+                <div className="book-card__image skeleton-box" />
+                <div className="book-card__title skeleton-text skeleton-text--title" />
+                <div className="book-card__author skeleton-text skeleton-text--author" />
+                <div className="book-card__subtitle skeleton-text skeleton-text--subtitle" />
+                <div className="book-card__meta skeleton-text skeleton-text--meta" />
+              </div>
+            ))}
+          </div>
         ) : null}
         {error ? <div className="for-you__state">{error}</div> : null}
         {!loading && !error ? (
@@ -103,6 +133,17 @@ export default function ForYouPage() {
             })}
           </div>
         ) : null}
+        {!loading && !error && books.length > 0 && (
+          <div className="for-you__load-more">
+            <button
+              className="btn"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? "Loading..." : "More Books"}
+            </button>
+          </div>
+        )}
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getBook } from "../../../lib/booksApi";
+import AddToLibraryButton from "../../../components/AddToLibraryButton";
 
 export default async function BookDetailPage({
   params,
@@ -121,6 +122,7 @@ export default async function BookDetailPage({
             {book.subscriptionRequired && (
               <span className="book-detail__badge">Premium</span>
             )}
+            <AddToLibraryButton bookId={id} />
           </div>
         </div>
       </div>

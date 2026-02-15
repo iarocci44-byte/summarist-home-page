@@ -13,7 +13,8 @@ export default function SearchBar() {
   useEffect(() => {
     let isMounted = true;
 
-    getRecommendedBooks()
+    // Fetch a large number of books for search (100 books to cover pagination)
+    getRecommendedBooks(0, 100)
       .then((data) => {
         if (isMounted) {
           setBooks(data);

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { FiLogOut } from "react-icons/fi";
 import logo from "../assets/logo.png";
 
 type SideNavProps = {
@@ -14,22 +15,22 @@ export default function SideNav({ isSignedIn, onAuthClick }: SideNavProps) {
         <Image src={logo} alt="Summarist" className="side-nav__logo" />
       </div>
       <nav className="side-nav__links">
-        <button type="button" className="side-nav__link" onClick={onAuthClick}>
-          Logout
-        </button>
         <Link className="side-nav__link" href="/for-you">
           For You
         </Link>
-        <a className="side-nav__link" href="#features">
-          Features
-        </a>
-        <a className="side-nav__link" href="#reviews">
-          Reviews
-        </a>
-        <a className="side-nav__link" href="#numbers">
-          Numbers
-        </a>
+        <Link className="side-nav__link" href="/my-library">
+          My Library
+        </Link>
+        <span className="side-nav__link side-nav__link--disabled">
+          Highlights
+        </span>
+        <span className="side-nav__link side-nav__link--disabled">
+          Search
+        </span>
       </nav>
+      <button type="button" className="side-nav__link side-nav__logout" onClick={onAuthClick}>
+        <FiLogOut /> Logout
+      </button>
     </aside>
   );
 }

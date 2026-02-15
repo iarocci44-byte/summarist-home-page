@@ -1,15 +1,6 @@
-@import "tailwindcss";
-
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -65,6 +56,12 @@ body {
   color: #032b41;
 }
 
+.side-nav__logo {
+  width: 150px;
+  height: auto;
+  display: block;
+}
+
 .side-nav__links {
   display: flex;
   flex-direction: column;
@@ -81,6 +78,25 @@ body {
 
 .side-nav__link:hover {
   color: #2b8a3e;
+}
+
+.side-nav__link--disabled {
+  cursor: not-allowed;
+  color: #1f3b2f !important;
+  opacity: 1 !important;
+}
+
+.side-nav__link--disabled:hover {
+  color: #1f3b2f !important;
+}
+
+.side-nav__logout {
+  margin-top: auto;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
 }
 
 /* GLOBAL SEARCH BAR */
@@ -454,6 +470,16 @@ button:disabled {
   align-items: flex-start;
 }
 
+.for-you__load-more {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.for-you__load-more .btn {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
 .book-card-link {
   text-decoration: none;
   color: inherit;
@@ -465,6 +491,98 @@ button:disabled {
 .book-card-link:hover .book-card {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(3, 43, 65, 0.12);
+}
+
+.book-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.book-remove-btn {
+  width: 100%;
+  padding: 6px 12px;
+  margin-top: 4px;
+  background: #2bd97c;
+  color: #032b41;
+  font-size: 13px;
+  font-weight: 600;
+  height: auto;
+  min-width: auto;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.book-remove-btn:hover:not(:disabled) {
+  background: #20ba68;
+  transform: scale(1.02);
+}
+
+.book-remove-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* SKELETON LOADING */
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-box,
+.skeleton-text {
+  background: linear-gradient(
+    90deg,
+    #e0e0e0 0%,
+    #f0f0f0 50%,
+    #e0e0e0 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.skeleton-box {
+  width: 100%;
+  height: 150px;
+  border-radius: 8px;
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 100%;
+  border-radius: 3px;
+}
+
+.skeleton-text--title {
+  height: 16px;
+  width: 85%;
+}
+
+.skeleton-text--author {
+  height: 13px;
+  width: 60%;
+}
+
+.skeleton-text--subtitle {
+  height: 12px;
+  width: 90%;
+}
+
+.skeleton-text--meta {
+  height: 11px;
+  width: 50%;
+}
+
+.book-card--skeleton {
+  pointer-events: none;
 }
 
 /* BOOK DETAIL */
@@ -592,8 +710,8 @@ button:disabled {
 }
 
 .book-detail__action-btn {
-  width: 110px !important;
-  min-width: 110px !important;
+  width: 110px;
+  min-width: 110px;
   height: auto !important;
   padding: 10px 16px;
   font-size: 14px;
@@ -603,6 +721,12 @@ button:disabled {
   justify-content: center;
   gap: 6px;
   white-space: nowrap;
+}
+
+.add-to-library-btn {
+  width: 200px;
+  min-width: 200px;
+  padding: 12px 24px;
 }
 
 .book-detail__tags-section {
@@ -1000,6 +1124,38 @@ button:disabled {
   color: #6b757b;
 }
 
+.auth-panel__button--guest {
+  width: 80%;
+  max-width: 320px;
+  margin: 0 auto 24px auto;
+  display: block;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 150ms ease;
+  position: relative;
+}
+
+.auth-panel__button--guest::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 2px;
+  background: #000000;
+}
+
+.auth-panel__button--guest:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.auth-panel__button--guest:active {
+  transform: scale(0.98);
+}
+
 .auth-panel__fields {
   display: grid;
   gap: 8px;
@@ -1060,10 +1216,22 @@ button:disabled {
   justify-self: center;
   width: 80%;
   max-width: 320px;
-  margin: 0 auto;
+  margin: 0 auto 24px auto;
   display: block;
   background: #1d4ed8;
   color: #ffffff;
+  position: relative;
+}
+
+.auth-panel__actions .btn.auth-panel__button--signin::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 2px;
+  background: #000000;
 }
 
 .auth-panel__google {
@@ -1213,6 +1381,12 @@ button:disabled {
 
 .nav__img--mask {
   max-width: 200px;
+}
+
+.nav__img--mask img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .nav__img {
@@ -1554,6 +1728,12 @@ button:disabled {
   font-weight: 500;
 }
 
+@media (max-width: 1200px) {
+  .for-you__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .landing__content {
     display: flex;
@@ -1645,7 +1825,33 @@ button:disabled {
   }
 
   .for-you__grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .book-card {
+    padding: 10px;
+  }
+
+  .book-card__image {
+    height: 100px;
+    margin-top: 20px;
+  }
+
+  .book-card__title {
+    font-size: 12px;
+  }
+
+  .book-card__author {
+    font-size: 11px;
+  }
+
+  .book-card__subtitle {
+    font-size: 10px;
+  }
+
+  .book-card__meta {
+    font-size: 10px;
   }
 
   .search-modal {
@@ -1705,6 +1911,11 @@ button:disabled {
     width: 100%;
   }
 
+  .add-to-library-btn {
+    width: 250px !important;
+    max-width: 100%;
+  }
+
   .player__title {
     font-size: 24px;
   }
@@ -1743,11 +1954,54 @@ button:disabled {
 
 @media (max-width: 576px) {
   .for-you__grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .book-card {
+    padding: 10px;
+    gap: 6px;
+  }
+
+  .book-card__image {
+    height: 160px;
+    margin-top: 16px;
+  }
+
+  .book-card__title {
+    font-size: 11px;
+  }
+
+  .book-card__author {
+    font-size: 10px;
+  }
+
+  .book-card__subtitle {
+    font-size: 9px;
+  }
+
+  .book-card__meta {
+    font-size: 9px;
+  }
+
+  .book-remove-btn {
+    font-size: 11px;
+    padding: 4px 8px;
   }
 
   .nav__list--mobile {
     display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .for-you__grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .book-card__image {
+    height: 140px;
   }
 }
 

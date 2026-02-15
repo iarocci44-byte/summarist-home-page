@@ -71,6 +71,18 @@ export default function AuthPanel({ onSignedIn }: AuthPanelProps) {
     }
   };
 
+  const handleGuestSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, "guest@summarist.com", "guest123");
+    } catch (err) {
+      setError("Guest login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignOut = async () => {
     setError(null);
     setLoading(true);
@@ -91,6 +103,14 @@ export default function AuthPanel({ onSignedIn }: AuthPanelProps) {
           {user ? `Signed in as ${user.email ?? "User"}` : "Not signed in"}
         </div>
       </div>
+      <button
+        className="auth-panel__button auth-panel__button--guest"
+        onClick={handleGuestSignIn}
+        disabled={loading}
+        type="button"
+      >
+        Login as Guest
+      </button>
       <div className="auth-panel__fields">
         <input
           className="auth-panel__input"
