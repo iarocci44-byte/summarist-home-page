@@ -29,6 +29,7 @@ type AppShellProps = {
 export default function AppShell({ children }: AppShellProps) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -38,12 +39,20 @@ export default function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsSignedIn(Boolean(user));
+      if (!user && isTransitioning) {
+        // Logout completed, end transition
+        setIsTransitioning(false);
+      }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isTransitioning]);
 
   useEffect(() => {
+    if (isTransitioning) {
+      return;
+    }
+
     if (isSignedIn && pathname === "/") {
       router.push("/for-you");
       return;
@@ -52,12 +61,16 @@ export default function AppShell({ children }: AppShellProps) {
     if (!isSignedIn && pathname === "/for-you") {
       router.push("/");
     }
-  }, [isSignedIn, pathname, router]);
+  }, [isSignedIn, pathname, router, isTransitioning]);
 
   const handleAuthClick = async () => {
     if (isSignedIn) {
-      await signOut(auth);
+      setIsTransitioning(true);
       router.push("/");
+      // Wait a moment for navigation to complete before signing out
+      setTimeout(async () => {
+        await signOut(auth);
+      }, 100);
       return;
     }
 
@@ -71,13 +84,21 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <AuthModalContext.Provider value={contextValue}>
-      {isSignedIn ? (
-        <SideNav isSignedIn={isSignedIn} onAuthClick={handleAuthClick} />
-      ) : null}
-      <div className={`page-shell${isSignedIn ? " page-shell--with-side-nav" : ""}`}>
-        {isSignedIn && pathname !== "/" && <SearchBar />}
-        {children}
-      </div>
+      {isTransitioning ? (
+        <div className="page-shell" style={{ minHeight: '100vh' }}>
+          {/* Blank screen during logout transition */}
+        </div>
+      ) : (
+        <>
+          {isSignedIn ? (
+            <SideNav isSignedIn={isSignedIn} onAuthClick={handleAuthClick} />
+          ) : null}
+          <div className={`page-shell${isSignedIn ? " page-shell--with-side-nav" : ""}`}>
+            {isSignedIn && pathname !== "/" && <SearchBar />}
+            {children}
+          </div>
+        </>
+      )}
       {isLoginOpen ? (
         <div
           className="modal"
