@@ -7,6 +7,7 @@ import { Book, getRecommendedBooks } from "../lib/booksApi";
 export default function SearchBar() {
   const [books, setBooks] = useState<Book[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [showSearchModal, setShowSearchModal] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +30,18 @@ export default function SearchBar() {
     };
   }, []);
 
+  // Debounce search query with 300ms delay
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setShowSearchModal(searchQuery.length > 0);
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
+
   // Close modal when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -50,23 +63,23 @@ export default function SearchBar() {
           <input
             type="text"
             className="search-bar__input"
-            placeholder="Search for books..."
+            placeholder="Search for books or authors..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setShowSearchModal(e.target.value.length > 0);
             }}
             onFocus={() => {
-              if (searchQuery.length > 0) {
+              if (debouncedSearchQuery.length > 0) {
                 setShowSearchModal(true);
               }
             }}
           />
-          {showSearchModal && searchQuery && (
+          {showSearchModal && debouncedSearchQuery && (
             <div className="search-modal">
               {(() => {
                 const filteredBooks = books.filter((book) =>
-                  book.title.toLowerCase().includes(searchQuery.toLowerCase())
+                  book.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                  book.author.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
                 );
                 
                 if (filteredBooks.length === 0) {

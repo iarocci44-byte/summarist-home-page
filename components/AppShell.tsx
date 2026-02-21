@@ -7,6 +7,7 @@ import { auth } from "../lib/firebase";
 import AuthPanel from "./AuthPanel";
 import SideNav from "./SideNav";
 import SearchBar from "./SearchBar";
+import Footer from "./Footer";
 
 type AuthModalContextValue = {
   openLogin: () => void;
@@ -90,12 +91,13 @@ export default function AppShell({ children }: AppShellProps) {
         </div>
       ) : (
         <>
-          {isSignedIn ? (
+          {isSignedIn && pathname !== "/choose-plan" ? (
             <SideNav isSignedIn={isSignedIn} onAuthClick={handleAuthClick} />
           ) : null}
-          <div className={`page-shell${isSignedIn ? " page-shell--with-side-nav" : ""}`}>
-            {isSignedIn && pathname !== "/" && <SearchBar />}
+          <div className={`page-shell${isSignedIn && pathname !== "/choose-plan" ? " page-shell--with-side-nav" : ""}`}>
+            {isSignedIn && pathname !== "/" && pathname !== "/choose-plan" && <SearchBar />}
             {children}
+            {pathname !== "/choose-plan" && <Footer />}
           </div>
         </>
       )}

@@ -45,6 +45,18 @@ export const getRecommendedBooks = async (offset = 0, limit = 10) => {
   }
 };
 
+export const getSuggestedBooks = async (limit = 5) => {
+  try {
+    const response = await booksApi.get<Book[]>("/getBooks", {
+      params: { status: "suggested" },
+    });
+    return response.data.slice(0, limit);
+  } catch (error) {
+    console.error("Error fetching suggested books:", error);
+    return [];
+  }
+};
+
 export const getBook = async (id: string) => {
   const response = await booksApi.get<Book>("/getBook", {
     params: { id },

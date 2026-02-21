@@ -1,11 +1,56 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthModal } from "../../components/AppShell";
+import { auth } from "../../lib/firebase";
+import { STRIPE_PRICES } from "../../lib/stripe";
 
 export default function ChoosePlanPage() {
   const router = useRouter();
   const { isSignedIn } = useAuthModal();
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (priceId: string) => {
+    if (!isSignedIn) {
+      alert("Please sign in to subscribe");
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const userId = auth.currentUser?.uid || '';
+      const email = auth.currentUser?.email || '';
+      
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId,
+          userId,
+          email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Failed to start checkout. Please try again.');
+      setLoading(false);
+    }
+  };
 
   return (
     <section className="choose-plan">
@@ -43,8 +88,12 @@ export default function ChoosePlanPage() {
                   ✓ Access to all premium content
                 </li>
               </ul>
-              <button className="btn choose-plan__btn choose-plan__btn--primary">
-                Subscribe Now
+              <button 
+                className="btn choose-plan__btn choose-plan__btn--primary"
+                onClick={() => handleSubscribe(STRIPE_PRICES.PREMIUM_YEARLY)}
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Subscribe Now'}
               </button>
             </div>
           </div>
@@ -68,8 +117,12 @@ export default function ChoosePlanPage() {
                   ✓ Access to all premium content
                 </li>
               </ul>
-              <button className="btn choose-plan__btn choose-plan__btn--primary">
-                Subscribe Now
+              <button 
+                className="btn choose-plan__btn choose-plan__btn--primary"
+                onClick={() => handleSubscribe(STRIPE_PRICES.PREMIUM_MONTHLY)}
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Subscribe Now'}
               </button>
             </div>
           </div>
@@ -78,7 +131,7 @@ export default function ChoosePlanPage() {
         <div className="choose-plan__footer">
           <button 
             className="choose-plan__cancel-btn"
-            onClick={() => router.back()}
+            onClick={() => router.push('/for-you')}
           >
             Cancel
           </button>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiSettings } from "react-icons/fi";
 import logo from "../assets/logo.png";
 
 type SideNavProps = {
@@ -28,6 +28,9 @@ export default function SideNav({ isSignedIn, onAuthClick }: SideNavProps) {
           Search
         </span>
       </nav>
+      <Link className="side-nav__link side-nav__settings" href="/settings">
+        <FiSettings /> Settings
+      </Link>
       <button type="button" className="side-nav__link side-nav__logout" onClick={onAuthClick}>
         <FiLogOut /> Logout
       </button>

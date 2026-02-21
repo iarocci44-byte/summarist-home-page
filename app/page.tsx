@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAuthModal } from "../components/AppShell";
 import landingImage from "../assets/landing.png";
@@ -7,6 +8,15 @@ import logo from "../assets/logo.png";
 
 export default function Home() {
   const { openLogin, isSignedIn, handleAuthClick } = useAuthModal();
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prevIndex) => (prevIndex + 1) % 6);
+    }, 2000); // Change every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -89,14 +99,14 @@ export default function Home() {
           </div>
           <div className="statistics__wrapper">
             <div className="statistics__content--header">
-              <div className="statistics__heading">Enhance your knowledge</div>
-              <div className="statistics__heading">Achieve greater success</div>
-              <div className="statistics__heading">Improve your health</div>
-              <div className="statistics__heading">
+              <div className="statistics__heading" style={{ color: activeIndex === 0 ? '#2bd97c' : '#6b757b' }}>Enhance your knowledge</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 1 ? '#2bd97c' : '#6b757b' }}>Achieve greater success</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 2 ? '#2bd97c' : '#6b757b' }}>Improve your health</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 3 ? '#2bd97c' : '#6b757b' }}>
                 Develop better parenting skills
               </div>
-              <div className="statistics__heading">Increase happiness</div>
-              <div className="statistics__heading">
+              <div className="statistics__heading" style={{ color: activeIndex === 4 ? '#2bd97c' : '#6b757b' }}>Increase happiness</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 5 ? '#2bd97c' : '#6b757b' }}>
                 Be the best version of yourself!
               </div>
             </div>
@@ -150,12 +160,12 @@ export default function Home() {
             <div
               className="statistics__content--header statistics__content--header-second"
             >
-              <div className="statistics__heading">Expand your learning</div>
-              <div className="statistics__heading">Accomplish your goals</div>
-              <div className="statistics__heading">Strengthen your vitality</div>
-              <div className="statistics__heading">Become a better caregiver</div>
-              <div className="statistics__heading">Improve your mood</div>
-              <div className="statistics__heading">Maximize your abilities</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 0 ? '#2bd97c' : '#6b757b' }}>Expand your learning</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 1 ? '#2bd97c' : '#6b757b' }}>Accomplish your goals</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 2 ? '#2bd97c' : '#6b757b' }}>Strengthen your vitality</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 3 ? '#2bd97c' : '#6b757b' }}>Become a better caregiver</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 4 ? '#2bd97c' : '#6b757b' }}>Improve your mood</div>
+              <div className="statistics__heading" style={{ color: activeIndex === 5 ? '#2bd97c' : '#6b757b' }}>Maximize your abilities</div>
             </div>
           </div>
         </div>
