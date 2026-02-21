@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer__content">
         <p className="footer__copyright">
-          © {currentYear} Summarist. All rights reserved.
+          © 2023 Summarist. All rights reserved.
         </p>
         <p className="footer__creator">
           <a 

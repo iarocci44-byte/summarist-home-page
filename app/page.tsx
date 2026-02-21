@@ -347,11 +347,11 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="footer__copyright--wrapper">
+          {/* <div className="footer__copyright--wrapper">
             <div className="footer__copyright">
               Copyright &copy; 2023 Summarist.
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </section>
