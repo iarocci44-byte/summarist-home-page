@@ -77,6 +77,9 @@ body {
   background: transparent;
   text-align: left;
   padding: 6px 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .side-nav__link:hover {
@@ -93,18 +96,32 @@ body {
   color: #1f3b2f !important;
 }
 
+.side-nav__bottom-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+}
+
 .side-nav__settings {
   display: flex !important;
   flex-direction: row !important;
   align-items: center;
   gap: 8px;
   justify-content: flex-start;
-  margin-top: auto;
+  font-size: 16px;
+}
+
+.side-nav__help {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
   font-size: 16px;
 }
 
 .side-nav__logout {
-  margin-top: 8px;
   display: flex !important;
   flex-direction: row !important;
   align-items: center;

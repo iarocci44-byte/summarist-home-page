@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FiLogOut, FiSettings } from "react-icons/fi";
+import { FiLogOut, FiSettings, FiHelpCircle, FiHome, FiBook, FiSearch, FiEdit2 } from "react-icons/fi";
 import logo from "../assets/logo.png";
 
 type SideNavProps = {
@@ -16,24 +16,29 @@ export default function SideNav({ isSignedIn, onAuthClick }: SideNavProps) {
       </div>
       <nav className="side-nav__links">
         <Link className="side-nav__link" href="/for-you">
-          For You
+          <FiHome /> For You
         </Link>
         <Link className="side-nav__link" href="/my-library">
-          My Library
+          <FiBook /> My Library
         </Link>
         <span className="side-nav__link side-nav__link--disabled">
-          Highlights
+          <FiEdit2 /> Highlights
         </span>
         <span className="side-nav__link side-nav__link--disabled">
-          Search
+          <FiSearch /> Search
         </span>
       </nav>
-      <Link className="side-nav__link side-nav__settings" href="/settings">
-        <FiSettings /> Settings
-      </Link>
-      <button type="button" className="side-nav__link side-nav__logout" onClick={onAuthClick}>
-        <FiLogOut /> Logout
-      </button>
+      <div className="side-nav__bottom-links">
+        <Link className="side-nav__link side-nav__settings" href="/settings">
+          <FiSettings /> Settings
+        </Link>
+        <span className="side-nav__link side-nav__link--disabled side-nav__help">
+          <FiHelpCircle /> Help & Support
+        </span>
+        <button type="button" className="side-nav__link side-nav__logout" onClick={onAuthClick}>
+          <FiLogOut /> Logout
+        </button>
+      </div>
     </aside>
   );
 }
