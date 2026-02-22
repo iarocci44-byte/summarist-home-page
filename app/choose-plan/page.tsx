@@ -12,6 +12,22 @@ export default function ChoosePlanPage() {
   const { isSignedIn } = useAuthModal();
   const [loading, setLoading] = useState(false);
 
+  const formatCheckoutError = (error: unknown): string => {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (typeof error === "string") {
+      return error;
+    }
+
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "Failed to start checkout. Please try again.";
+    }
+  };
+
   const handleSubscribe = async (priceId: string) => {
     if (!isSignedIn) {
       alert("Please sign in to subscribe");
@@ -38,6 +54,11 @@ export default function ChoosePlanPage() {
         }
       );
 
+      const responseTimeout = window.setTimeout(() => {
+        setLoading(false);
+        alert("Checkout session was created but no Stripe URL was returned. Check that the Firebase Stripe extension is installed in this project and that the price ID exists in the same Stripe mode (test/live).");
+      }, 15000);
+
       const unsubscribe = onSnapshot(checkoutSessionRef, (snapshot) => {
         const session = snapshot.data();
         if (!session) {
@@ -49,6 +70,7 @@ export default function ChoosePlanPage() {
             typeof session.error === "string"
               ? session.error
               : session.error.message || "Failed to start checkout session";
+          window.clearTimeout(responseTimeout);
           unsubscribe();
           setLoading(false);
           alert(message);
@@ -56,13 +78,15 @@ export default function ChoosePlanPage() {
         }
 
         if (session.url) {
+          window.clearTimeout(responseTimeout);
           unsubscribe();
           window.location.assign(session.url);
         }
       });
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Failed to start checkout. Please try again.');
+      const message = formatCheckoutError(error);
+      alert(message);
       setLoading(false);
     }
   };
