@@ -7,7 +7,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceId, userId, email } = await req.json();
+    const { priceId, userId, firebaseUID, email } = await req.json();
+    const resolvedUserId = firebaseUID || userId || '';
 
     if (!priceId) {
       return NextResponse.json(
@@ -30,7 +31,8 @@ export async function POST(req: NextRequest) {
       cancel_url: `${req.nextUrl.origin}/choose-plan`,
       customer_email: email || undefined,
       metadata: {
-        userId: userId || '',
+        firebaseUID: resolvedUserId,
+        userId: resolvedUserId,
       },
     });
 
