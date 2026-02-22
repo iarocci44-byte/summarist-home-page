@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthModal } from "../../components/AppShell";
-import { auth } from "../../lib/firebase";
+import { addDoc, collection, onSnapshot } from "firebase/firestore";
+import { auth, db } from "../../lib/firebase";
 import { STRIPE_PRICES } from "../../lib/stripe";
 
 export default function ChoosePlanPage() {
@@ -17,34 +18,48 @@ export default function ChoosePlanPage() {
       return;
     }
 
+    if (!auth.currentUser) {
+      alert("Please sign in to subscribe");
+      return;
+    }
+
     setLoading(true);
     
     try {
-      const userId = auth.currentUser?.uid || '';
-      const email = auth.currentUser?.email || '';
-      
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId,
-          userId,
-          email,
-        }),
+      const checkoutSessionRef = await addDoc(
+        collection(db, "customers", auth.currentUser.uid, "checkout_sessions"),
+        {
+          price: priceId,
+          success_url: `${window.location.origin}/for-you`,
+          cancel_url: `${window.location.origin}/choose-plan`,
+          metadata: {
+            firebaseUID: auth.currentUser.uid,
+          },
+        }
+      );
+
+      const unsubscribe = onSnapshot(checkoutSessionRef, (snapshot) => {
+        const session = snapshot.data();
+        if (!session) {
+          return;
+        }
+
+        if (session.error) {
+          const message =
+            typeof session.error === "string"
+              ? session.error
+              : session.error.message || "Failed to start checkout session";
+          unsubscribe();
+          setLoading(false);
+          alert(message);
+          return;
+        }
+
+        if (session.url) {
+          unsubscribe();
+          window.location.assign(session.url);
+        }
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session');
-      }
-
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
-      }
     } catch (error) {
       console.error('Checkout error:', error);
       alert('Failed to start checkout. Please try again.');

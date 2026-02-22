@@ -10,7 +10,8 @@ import {
   signOut,
   User,
 } from "firebase/auth";
-import { auth, googleProvider } from "../lib/firebase";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { auth, db, googleProvider } from "../lib/firebase";
 import gNormal from "../assets/GNormal.png";
 
 type AuthPanelProps = {
@@ -51,7 +52,17 @@ export default function AuthPanel({ onSignedIn }: AuthPanelProps) {
     setError(null);
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const credentials = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(
+        doc(db, "users", credentials.user.uid),
+        {
+          uid: credentials.user.uid,
+          email: credentials.user.email ?? email,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign-up failed.");
     } finally {
@@ -63,7 +74,18 @@ export default function AuthPanel({ onSignedIn }: AuthPanelProps) {
     setError(null);
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const credentials = await signInWithPopup(auth, googleProvider);
+      const userDocRef = doc(db, "users", credentials.user.uid);
+      const userDocSnapshot = await getDoc(userDocRef);
+
+      if (!userDocSnapshot.exists()) {
+        await setDoc(userDocRef, {
+          uid: credentials.user.uid,
+          email: credentials.user.email ?? "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed.");
     } finally {
