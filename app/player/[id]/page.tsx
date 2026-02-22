@@ -1,25 +1,113 @@
-import Link from "next/link";
-import { getBook } from "../../../lib/booksApi";
+"use client";
 
-export default async function PlayerPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ mode?: string }>;
-}) {
-  const { id } = await params;
-  const resolvedSearchParams = await searchParams;
-  const mode = resolvedSearchParams.mode || "read";
-  
-  let book;
-  try {
-    book = await getBook(id);
-  } catch (error) {
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../../../lib/firebase";
+import { Book, getBook } from "../../../lib/booksApi";
+import { hasActiveSubscription } from "../../../lib/subscription";
+
+export default function PlayerPage() {
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const id = params.id;
+  const mode = searchParams.get("mode") || "read";
+
+  const [book, setBook] = useState<Book | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hasPremiumAccess, setHasPremiumAccess] = useState<boolean>(false);
+  const [checkingAccess, setCheckingAccess] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadBook = async () => {
+      try {
+        const nextBook = await getBook(id);
+        if (isMounted) {
+          setBook(nextBook);
+        }
+      } catch (loadError) {
+        if (isMounted) {
+          setError("Unable to load book details right now.");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadBook();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!book?.subscriptionRequired) {
+      setHasPremiumAccess(true);
+      setCheckingAccess(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    setCheckingAccess(true);
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) {
+        return;
+      }
+
+      if (!user) {
+        setHasPremiumAccess(false);
+        setCheckingAccess(false);
+        return;
+      }
+
+      try {
+        const hasAccess = await hasActiveSubscription(user.uid);
+        if (isMounted) {
+          setHasPremiumAccess(hasAccess);
+        }
+      } catch {
+        if (isMounted) {
+          setHasPremiumAccess(false);
+        }
+      } finally {
+        if (isMounted) {
+          setCheckingAccess(false);
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [book]);
+
+  if (loading) {
     return (
       <section className="player">
         <div className="row">
-          <div className="player__state">Unable to load book details right now.</div>
+          <div className="player__state">Loading book...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="player">
+        <div className="row">
+          <div className="player__state">{error}</div>
           <Link href="/for-you" className="btn">
             Back to For You
           </Link>
@@ -41,7 +129,27 @@ export default async function PlayerPage({
     );
   }
 
-  const imageSrc = book.imageLink ?? book.imageLInk;
+  if (book.subscriptionRequired && (checkingAccess || !hasPremiumAccess)) {
+    return (
+      <section className="player">
+        <div className="row">
+          <Link href="/for-you" className="player__back-btn">
+            ← Back
+          </Link>
+          <div className="player__state">
+            {checkingAccess
+              ? "Checking your subscription..."
+              : "This book is part of Premium. Upgrade to unlock read and listen."}
+          </div>
+          {!checkingAccess && (
+            <Link href="/choose-plan" className="btn">
+              Upgrade to Premium
+            </Link>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="player">
@@ -49,7 +157,7 @@ export default async function PlayerPage({
         <Link href="/for-you" className="player__back-btn">
           ← Back
         </Link>
-        
+
         <div className="player__header">
           <h1 className="player__title">{book.title}</h1>
           <h2 className="player__author">by {book.author}</h2>

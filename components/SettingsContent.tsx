@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { auth } from "../lib/firebase";
 import { useAuthModal } from "./AppShell";
-
-type SubscriptionTier = "free" | "premium" | "basic";
+import { getSubscriptionInfo, SubscriptionTier } from "../lib/subscription";
 
 interface UserSubscription {
   tier: SubscriptionTier;
@@ -22,23 +21,51 @@ export default function SettingsContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!isSignedIn || !auth.currentUser) {
       setLoading(false);
-      return;
+      return () => {
+        isMounted = false;
+      };
     }
 
     // Get user email
     setUserEmail(auth.currentUser.email || "");
 
-    // TODO: Fetch actual subscription data from your backend/Stripe
-    // For now, we'll show a placeholder
-    // You would typically call an API endpoint that checks Stripe for the user's subscription
-    setSubscription({
-      tier: "free",
-      status: "active"
-    });
+    const loadSubscription = async () => {
+      try {
+        const info = await getSubscriptionInfo(auth.currentUser!.uid);
+        if (!isMounted) {
+          return;
+        }
 
-    setLoading(false);
+        setSubscription({
+          tier: info.tier,
+          status: info.status,
+          currentPeriodEnd: info.currentPeriodEnd,
+        });
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setSubscription({
+          tier: "free",
+          status: "inactive",
+        });
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadSubscription();
+
+    return () => {
+      isMounted = false;
+    };
   }, [isSignedIn]);
 
   if (!isSignedIn) {
