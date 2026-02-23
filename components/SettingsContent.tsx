@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { addDoc, collection, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { auth } from "../lib/firebase";
+import { db } from "../lib/firebase";
 import { useAuthModal } from "./AppShell";
 import { getSubscriptionInfo, SubscriptionTier } from "../lib/subscription";
 
@@ -19,6 +21,7 @@ export default function SettingsContent() {
     status: "inactive"
   });
   const [loading, setLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,6 +70,154 @@ export default function SettingsContent() {
       isMounted = false;
     };
   }, [isSignedIn]);
+
+  const handleManageSubscription = async () => {
+    if (!auth.currentUser) {
+      alert("Please sign in to manage your subscription.");
+      return;
+    }
+
+    setPortalLoading(true);
+
+    try {
+      const userId = auth.currentUser.uid;
+      const customerDocRef = doc(db, "customers", userId);
+      const customerSnapshot = await getDoc(customerDocRef);
+
+      if (!customerSnapshot.exists()) {
+        setPortalLoading(false);
+        alert(
+          `No Stripe customer record found for this account at customers/${userId}. Complete checkout once to create the customer, then retry Manage Subscription.`
+        );
+        return;
+      }
+
+      const customerData = customerSnapshot.data();
+      const possibleStripeCustomerId =
+        customerData.stripeId ||
+        customerData.customer_id ||
+        customerData.stripeCustomerId ||
+        customerData.customerId;
+
+      if (!possibleStripeCustomerId) {
+        setPortalLoading(false);
+        alert(
+          `Stripe customer ID is missing on customers/${userId}. The Stripe extension should store this after checkout; check extension logs and customer doc fields.`
+        );
+        return;
+      }
+
+      const portalSessionRef = await addDoc(
+        collection(db, "customers", userId, "portal_sessions"),
+        {
+          return_url: `${window.location.origin}/settings`,
+        }
+      );
+
+      let hasResolved = false;
+      let unsubscribeSnapshot = () => {};
+
+      const responseTimeout = window.setTimeout(async () => {
+        if (hasResolved) {
+          return;
+        }
+
+        try {
+          const latestSnapshot = await getDoc(portalSessionRef);
+          const latestData = latestSnapshot.data();
+
+          if (latestData?.url) {
+            hasResolved = true;
+            unsubscribeSnapshot();
+            window.location.assign(latestData.url);
+            return;
+          }
+
+          if (latestData?.error) {
+            hasResolved = true;
+            unsubscribeSnapshot();
+            setPortalLoading(false);
+            const lateErrorMessage =
+              typeof latestData.error === "string"
+                ? latestData.error
+                : latestData.error.message || "Failed to open customer portal.";
+            alert(lateErrorMessage);
+            return;
+          }
+        } catch (timeoutError) {
+          hasResolved = true;
+          unsubscribeSnapshot();
+          setPortalLoading(false);
+          const message =
+            timeoutError instanceof Error
+              ? timeoutError.message
+              : "Customer portal session timed out while reading the session document.";
+          alert(message);
+          return;
+        }
+
+        hasResolved = true;
+        unsubscribeSnapshot();
+        setPortalLoading(false);
+        alert(
+          `Customer portal session timed out. Verify the Firebase Stripe extension is installed in this same Firebase project, Stripe Billing Portal is configured in Stripe, and inspect this doc for an error/url: customers/${userId}/portal_sessions/${portalSessionRef.id}`
+        );
+      }, 30000);
+
+      unsubscribeSnapshot = onSnapshot(
+        portalSessionRef,
+        (snapshot) => {
+          if (hasResolved) {
+            return;
+          }
+
+          const data = snapshot.data();
+          if (!data) {
+            return;
+          }
+
+          if (data.error) {
+            hasResolved = true;
+            window.clearTimeout(responseTimeout);
+            unsubscribeSnapshot();
+            setPortalLoading(false);
+            const message =
+              typeof data.error === "string"
+                ? data.error
+                : data.error.message || "Failed to open customer portal.";
+            alert(message);
+            return;
+          }
+
+          if (data.url) {
+            hasResolved = true;
+            window.clearTimeout(responseTimeout);
+            unsubscribeSnapshot();
+            window.location.assign(data.url);
+          }
+        },
+        (snapshotError) => {
+          if (hasResolved) {
+            return;
+          }
+
+          hasResolved = true;
+          window.clearTimeout(responseTimeout);
+          unsubscribeSnapshot();
+          setPortalLoading(false);
+          const message =
+            snapshotError instanceof Error
+              ? snapshotError.message
+              : "Failed to read portal session document.";
+          alert(message);
+        }
+      );
+    } catch (error) {
+      setPortalLoading(false);
+      const message = error instanceof Error ? error.message : "Failed to open customer portal.";
+      alert(message);
+    }
+  };
 
   if (!isSignedIn) {
     return (
@@ -149,8 +300,12 @@ export default function SettingsContent() {
                             Your subscription renews on: {subscription.currentPeriodEnd.toLocaleDateString()}
                           </p>
                         )}
-                        <button className="btn btn--secondary settings__manage-btn">
-                          Manage Subscription
+                        <button
+                          className="btn btn--secondary settings__manage-btn"
+                          onClick={handleManageSubscription}
+                          disabled={portalLoading}
+                        >
+                          {portalLoading ? "Opening..." : "Manage Subscription"}
                         </button>
                       </div>
                     )}

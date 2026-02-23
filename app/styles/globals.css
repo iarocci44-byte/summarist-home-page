@@ -231,7 +231,7 @@ button:disabled {
 .btn {
   background-color: #2bd97c;
   color: #032b41;
-  width: 100%;
+  width: auto;
   height: 40px;
   border-radius: 4px;
   font-size: 16px;
@@ -239,6 +239,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 10px 20px;
   /* min-width: 180px; */
 }
 
