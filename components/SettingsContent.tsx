@@ -5,8 +5,6 @@ import { auth } from "../lib/firebase";
 import { useAuthModal } from "./AppShell";
 import { getSubscriptionInfo, SubscriptionTier } from "../lib/subscription";
 
-const STRIPE_BILLING_PORTAL_URL = "https://billing.stripe.com/p/login/test_aFafZa6yd0MU87X6D29Zm00";
-
 interface UserSubscription {
   tier: SubscriptionTier;
   status: string;
@@ -21,7 +19,6 @@ export default function SettingsContent() {
     status: "inactive"
   });
   const [loading, setLoading] = useState(true);
-  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -71,14 +68,8 @@ export default function SettingsContent() {
     };
   }, [isSignedIn]);
 
-  const handleManageSubscription = async () => {
-    if (!auth.currentUser) {
-      alert("Please sign in to manage your subscription.");
-      return;
-    }
-
-    setPortalLoading(true);
-    window.location.assign(STRIPE_BILLING_PORTAL_URL);
+  const handleManageSubscription = () => {
+    alert("This feature not implemented yet");
   };
 
   if (!isSignedIn) {
@@ -165,9 +156,9 @@ export default function SettingsContent() {
                         <button
                           className="btn btn--secondary settings__manage-btn"
                           onClick={handleManageSubscription}
-                          disabled={portalLoading}
+                          aria-disabled="true"
                         >
-                          {portalLoading ? "Opening..." : "Manage Subscription"}
+                          Manage my subscription
                         </button>
                       </div>
                     )}

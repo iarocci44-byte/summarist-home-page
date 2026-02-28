@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../../lib/firebase";
-import { Book, getBook } from "../../../lib/booksApi";
+import { Book, getBook, markBookAsFinished } from "../../../lib/booksApi";
 import { hasActiveSubscription } from "../../../lib/subscription";
 
 export default function PlayerPage() {
@@ -92,6 +92,26 @@ export default function PlayerPage() {
       unsubscribe();
     };
   }, [book]);
+
+  useEffect(() => {
+    if (mode !== "listen") {
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        return;
+      }
+
+      try {
+        await markBookAsFinished(user.uid, id);
+      } catch (error) {
+        console.error("Failed to mark finished book:", error);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [id, mode]);
 
   if (loading) {
     return (
@@ -193,18 +213,28 @@ export default function PlayerPage() {
         )}
 
         {mode === "listen" && (
-          <div className="player__content">
-            {book.audioLink ? (
-              <div className="player__audio-viewer">
-                <audio controls className="player__audio">
-                  <source src={book.audioLink} type="audio/mpeg" />
-                  Your browser does not support the audio element.
-                </audio>
-                <p className="player__note">Audio player for {book.title}</p>
-              </div>
-            ) : (
-              <p className="player__note">No audio content available</p>
-            )}
+          <div className="player__content player__content--listen">
+            <div className="player__book-viewer">
+              {book.summary ? (
+                <div className="player__text-content">
+                  <p className="player__summary-text">{book.summary}</p>
+                </div>
+              ) : (
+                <p className="player__note">No book content available</p>
+              )}
+
+              {book.audioLink ? (
+                <div className="player__audio-viewer player__audio-viewer--fixed">
+                  <audio controls className="player__audio">
+                    <source src={book.audioLink} type="audio/mpeg" />
+                    Your browser does not support the audio element.
+                  </audio>
+                  <p className="player__note">Audio player for {book.title}</p>
+                </div>
+              ) : (
+                <p className="player__note">No audio content available</p>
+              )}
+            </div>
           </div>
         )}
       </div>

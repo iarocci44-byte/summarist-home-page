@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuthModal } from "../../components/AppShell";
-import { Book, getUserLibrary, removeFromLibrary } from "../../lib/booksApi";
+import { Book, getFinishedBooks, getUserLibrary, removeFromLibrary } from "../../lib/booksApi";
 import { auth } from "../../lib/firebase";
 
 export default function MyLibraryPage() {
   const { isSignedIn, handleAuthClick } = useAuthModal();
   const [books, setBooks] = useState<Book[]>([]);
+  const [finishedBooks, setFinishedBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removingBookId, setRemovingBookId] = useState<string | null>(null);
@@ -22,15 +23,27 @@ export default function MyLibraryPage() {
     setLoading(true);
     setError(null);
 
-    getUserLibrary(auth.currentUser.uid)
-      .then((data) => {
-        if (isMounted) {
-          setBooks(data);
+    Promise.allSettled([
+      getUserLibrary(auth.currentUser.uid),
+      getFinishedBooks(auth.currentUser.uid),
+    ])
+      .then((results) => {
+        if (!isMounted) {
+          return;
         }
-      })
-      .catch(() => {
-        if (isMounted) {
+
+        const [libraryResult, finishedResult] = results;
+
+        if (libraryResult.status === "fulfilled") {
+          setBooks(libraryResult.value);
+        } else {
           setError("Unable to load your library right now.");
+        }
+
+        if (finishedResult.status === "fulfilled") {
+          setFinishedBooks(finishedResult.value);
+        } else {
+          setFinishedBooks([]);
         }
       })
       .finally(() => {
@@ -147,6 +160,47 @@ export default function MyLibraryPage() {
                 </div>
               );
             })}
+          </div>
+        ) : null}
+
+        {!loading && !error ? (
+          <div className="for-you__section" style={{ marginTop: "40px" }}>
+            <h2 className="for-you__section-title">Finished Books</h2>
+            {finishedBooks.length === 0 ? (
+              <div className="for-you__state">
+                <p>Books you listen to will appear here.</p>
+              </div>
+            ) : (
+              <div className="for-you__grid">
+                {finishedBooks.map((book) => {
+                  const imageSrc = book.imageLink ?? book.imageLInk;
+                  return (
+                    <div key={`finished-${book.id}`} className="book-card-wrapper">
+                      <Link href={`/book/${book.id}`} className="book-card-link">
+                        <article className="book-card">
+                          {book.subscriptionRequired ? (
+                            <span className="book-card__badge book-card__badge--premium">Premium</span>
+                          ) : null}
+                          {imageSrc ? (
+                            <img className="book-card__image" src={imageSrc} alt={book.title} />
+                          ) : (
+                            <div className="book-card__image" aria-hidden="true" />
+                          )}
+                          <div className="book-card__title">{book.title}</div>
+                          <div className="book-card__author">{book.author}</div>
+                          {book.subTitle ? (
+                            <div className="book-card__subtitle">{book.subTitle}</div>
+                          ) : null}
+                          <div className="book-card__meta">
+                            <span>Rating: {book.averageRating ?? "N/A"}</span>
+                          </div>
+                        </article>
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : null}
         </div>

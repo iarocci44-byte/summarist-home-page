@@ -121,3 +121,38 @@ export const removeFromLibrary = async (userId: string, bookId: string) => {
     throw error;
   }
 };
+
+export const markBookAsFinished = async (userId: string, bookId: string) => {
+  try {
+    const finishedDocRef = doc(db, "users", userId, "finishedBooks", bookId);
+
+    await setDoc(finishedDocRef, {
+      bookId,
+      finishedAt: new Date().toISOString(),
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error marking book as finished:", error);
+    throw error;
+  }
+};
+
+export const getFinishedBooks = async (userId: string) => {
+  try {
+    const finishedRef = collection(db, "users", userId, "finishedBooks");
+    const finishedSnapshot = await getDocs(finishedRef);
+
+    const bookIds = finishedSnapshot.docs.map((entry) => entry.data().bookId || entry.id);
+
+    if (bookIds.length === 0) {
+      return [];
+    }
+
+    const books = await Promise.all(bookIds.map((bookId) => getBook(bookId)));
+    return books.filter((book) => book !== null);
+  } catch (error) {
+    console.error("Error fetching finished books:", error);
+    throw error;
+  }
+};

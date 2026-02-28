@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getBook } from "../../../lib/booksApi";
 import AddToLibraryButton from "../../../components/AddToLibraryButton";
-import PremiumAccessButtons from "../../../components/PremiumAccessButtons";
+import BookActionSection from "../../../components/BookActionSection";
 
 export default async function BookDetailPage({
   params,
@@ -81,12 +81,10 @@ export default async function BookDetailPage({
                 )}
               </div>
             </div>
-            <div className="book-detail__actions">
-              <PremiumAccessButtons
-                bookId={id}
-                subscriptionRequired={book.subscriptionRequired}
-              />
-            </div>
+            <BookActionSection
+              bookId={id}
+              subscriptionRequired={book.subscriptionRequired}
+            />
             {book.tags && book.tags.length > 0 && (
               <div className="book-detail__tags-section">
                 <h3 className="book-detail__tags-title">What's it about</h3>

@@ -23,6 +23,7 @@ export default function AuthPanel({ onSignedIn }: AuthPanelProps) {
   const [password, setPassword] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -38,11 +39,19 @@ export default function AuthPanel({ onSignedIn }: AuthPanelProps) {
 
   const handleEmailSignIn = async () => {
     setError(null);
+    setShowSignupPrompt(false);
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      setError("Wrong username and/or password");
+    } catch (err: any) {
+      console.log('Sign-in error:', err);
+      if (err?.code === "auth/wrong-password") {
+        setError("Wrong username and/or password.");
+        setShowSignupPrompt(false);
+      } else {
+        setError("Email address not found, would you like to sign up?");
+        setShowSignupPrompt(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -50,6 +59,12 @@ export default function AuthPanel({ onSignedIn }: AuthPanelProps) {
 
   const handleEmailSignUp = async () => {
     setError(null);
+    // Simple email format check
+    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if (!emailRegex.test(email)) {
+      alert("Invalid email address, please try again.");
+      return;
+    }
     setLoading(true);
     try {
       const credentials = await createUserWithEmailAndPassword(auth, email, password);
@@ -177,7 +192,22 @@ export default function AuthPanel({ onSignedIn }: AuthPanelProps) {
           Sign Up
         </button>
       </div>
-      {error ? <div className="auth-panel__error">{error}</div> : null}
+      {(error || showSignupPrompt) && (
+        <div className="auth-error-modal" role="alertdialog" aria-modal="true">
+          <div className="auth-error-modal__panel">
+            {error ? <div className="auth-error-modal__message">{error}</div> : null}
+            {showSignupPrompt && (
+              <button
+                className="btn auth-panel__button auth-panel__button--signup"
+                onClick={handleEmailSignUp}
+                disabled={loading}
+              >
+                Sign Up
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
